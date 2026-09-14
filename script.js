@@ -130,4 +130,40 @@ document.addEventListener('DOMContentLoaded', function () {
       else if (e.key === 'ArrowRight') showIndex(currentIndex + 1);
     });
   }
+
+  // ---------------------------------------------------------------
+  // Menu latéral des projets (pages galerie) : mise en surbrillance
+  // du projet actuellement visible au défilement.
+  // ---------------------------------------------------------------
+  var sideNav = document.querySelector('.side-nav');
+  if (sideNav) {
+    var sideLinks = Array.prototype.slice.call(sideNav.querySelectorAll('a'));
+    var targets = sideLinks
+      .map(function (link) {
+        var id = link.getAttribute('href').replace('#', '');
+        var el = document.getElementById(id);
+        return el ? { link: link, el: el } : null;
+      })
+      .filter(Boolean);
+
+    if (targets.length && 'IntersectionObserver' in window) {
+      var setActive = function (link) {
+        sideLinks.forEach(function (l) { l.classList.remove('is-active'); });
+        if (link) link.classList.add('is-active');
+      };
+
+      var observer = new IntersectionObserver(function (entries) {
+        var visible = entries
+          .filter(function (e) { return e.isIntersecting; })
+          .sort(function (a, b) { return a.boundingClientRect.top - b.boundingClientRect.top; });
+        if (visible.length) {
+          var match = targets.find(function (t) { return t.el === visible[0].target; });
+          if (match) setActive(match.link);
+        }
+      }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+
+      targets.forEach(function (t) { observer.observe(t.el); });
+      setActive(targets[0].link);
+    }
+  }
 });
